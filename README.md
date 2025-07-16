@@ -14,7 +14,7 @@ A Model Context Protocol (MCP) server that provides access to Yahoo Finance data
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/yahoo-finance-mcp.git
+git clone https://github.com/phields/yahoo-finance-mcp.git
 cd yahoo-finance-mcp
 ```
 
