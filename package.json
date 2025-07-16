@@ -7,9 +7,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
-    "start": "node build/index.js",
-    "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix"
+    "start": "node build/index.js"
   },
   "keywords": [
     "mcp",
