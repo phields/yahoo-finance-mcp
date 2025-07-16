@@ -1,9 +1,12 @@
 {
   "name": "yahoo-finance-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Model Context Protocol server for Yahoo Finance API",
   "main": "build/index.js",
   "type": "module",
+  "bin": {
+    "yahoo-finance-mcp": "./build/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
