@@ -499,16 +499,73 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
           count?: number;
         };
         
-        const gainers = await yahooFinance.dailyGainers({ count });
-        
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(gainers, null, 2),
-            },
-          ],
-        };
+        try {
+          // 设置查询选项，支持语言和区域设置
+          const queryOptions = { 
+            count, 
+            lang: "en-US", 
+            region: "US" 
+          };
+          
+          // 使用更加健壮的方式处理数据请求
+          const gainersResult = await yahooFinance.dailyGainers(queryOptions).catch(async (yahooError) => {
+            // 记录原始错误，但继续尝试备用方法
+            console.error("Yahoo Finance dailyGainers API call failed:", yahooError);
+            
+            // 备用方式：直接使用 Yahoo Finance API
+            const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_gainers&count=${count}`;
+            
+            const response = await fetch(url);
+            if (!response.ok) {
+              throw new Error(`Yahoo Finance API returned status ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data?.finance?.result?.[0] || { count: 0, quotes: [] };
+          });
+          
+          if (!gainersResult) {
+            throw new Error("无法获取每日涨幅股票数据");
+          }
+          
+          // 处理和清理数据
+          const safeGainers = {
+            count: gainersResult.count || 0,
+            quotes: (gainersResult.quotes || []).map((item: any) => ({
+              symbol: item.symbol || '',
+              shortName: item.shortName || item.symbol || '',
+              regularMarketPrice: item.regularMarketPrice || null,
+              regularMarketChange: item.regularMarketChange || null,
+              regularMarketChangePercent: item.regularMarketChangePercent || null,
+              regularMarketVolume: item.regularMarketVolume || null,
+              marketCap: item.marketCap || null,
+              exchange: item.exchange || null,
+              fullExchangeName: item.fullExchangeName || null
+            })),
+            start: gainersResult.start,
+            timestamp: new Date().toISOString()
+          };
+          
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(safeGainers, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          console.error("Error in get_daily_gainers:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                text: `获取每日涨幅股票数据时发生错误: ${error instanceof Error ? error.message : "未知错误"}`,
+              },
+            ],
+            isError: true,
+          };
+        }
       }
 
       case "get_daily_losers": {
@@ -516,16 +573,73 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
           count?: number;
         };
         
-        const losers = await yahooFinance.dailyLosers({ count });
-        
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(losers, null, 2),
-            },
-          ],
-        };
+        try {
+          // 设置查询选项，支持语言和区域设置
+          const queryOptions = { 
+            count, 
+            lang: "en-US", 
+            region: "US" 
+          };
+          
+          // 使用更加健壮的方式处理数据请求
+          const losersResult = await yahooFinance.dailyLosers(queryOptions).catch(async (yahooError) => {
+            // 记录原始错误，但继续尝试备用方法
+            console.error("Yahoo Finance dailyLosers API call failed:", yahooError);
+            
+            // 备用方式：直接使用 Yahoo Finance API
+            const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_losers&count=${count}`;
+            
+            const response = await fetch(url);
+            if (!response.ok) {
+              throw new Error(`Yahoo Finance API returned status ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data?.finance?.result?.[0] || { count: 0, quotes: [] };
+          });
+          
+          if (!losersResult) {
+            throw new Error("无法获取每日跌幅股票数据");
+          }
+          
+          // 处理和清理数据
+          const safeLosers = {
+            count: losersResult.count || 0,
+            quotes: (losersResult.quotes || []).map((item: any) => ({
+              symbol: item.symbol || '',
+              shortName: item.shortName || item.symbol || '',
+              regularMarketPrice: item.regularMarketPrice || null,
+              regularMarketChange: item.regularMarketChange || null,
+              regularMarketChangePercent: item.regularMarketChangePercent || null,
+              regularMarketVolume: item.regularMarketVolume || null,
+              marketCap: item.marketCap || null,
+              exchange: item.exchange || null,
+              fullExchangeName: item.fullExchangeName || null
+            })),
+            start: losersResult.start,
+            timestamp: new Date().toISOString()
+          };
+          
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(safeLosers, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          console.error("Error in get_daily_losers:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                text: `获取每日跌幅股票数据时发生错误: ${error instanceof Error ? error.message : "未知错误"}`,
+              },
+            ],
+            isError: true,
+          };
+        }
       }
 
       case "get_chart": {
@@ -537,28 +651,48 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
           events?: string;
         };
         
-        // Parse period strings
-        const parsePeriod = (period: string) => {
-          if (period === "now") return new Date();
-          if (period.match(/^\d{4}-\d{2}-\d{2}$/)) return new Date(period);
-          return period;
-        };
-        
-        const chart = await yahooFinance.chart(symbol, {
-          period1: parsePeriod(period1),
-          period2: parsePeriod(period2),
-          interval: interval as any,
-          events,
-        });
-        
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(chart, null, 2),
-            },
-          ],
-        };
+        try {
+          // Parse period strings
+          const parsePeriod = (period: string) => {
+            if (period === "now") return new Date();
+            if (period.match(/^\d{4}-\d{2}-\d{2}$/)) return new Date(period);
+            return period;
+          };
+          
+          const chart = await yahooFinance.chart(symbol, {
+            period1: parsePeriod(period1),
+            period2: parsePeriod(period2),
+            interval: interval as any,
+            events,
+          });
+          
+          // 安全处理 chart 数据，确保可以序列化为 JSON
+          const safeChart = JSON.parse(JSON.stringify(chart, (key, value) => {
+            // 处理无法序列化的特殊对象，如日期等
+            if (value instanceof Date) return value.toISOString();
+            return value;
+          }));
+          
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(safeChart, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          console.error("Error in get_chart:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                text: `获取图表数据时发生错误: ${error instanceof Error ? error.message : "未知错误"}`,
+              },
+            ],
+            isError: true,
+          };
+        }
       }
 
       case "get_quote_summary": {
@@ -567,18 +701,38 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
           modules?: string[];
         };
         
-        const quoteSummary = await yahooFinance.quoteSummary(symbol, {
-          modules: modules as any,
-        });
-        
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(quoteSummary, null, 2),
-            },
-          ],
-        };
+        try {
+          const quoteSummary = await yahooFinance.quoteSummary(symbol, {
+            modules: modules as any,
+          });
+          
+          // 安全处理 quoteSummary 数据，确保可以序列化为 JSON
+          const safeQuoteSummary = JSON.parse(JSON.stringify(quoteSummary, (key, value) => {
+            // 处理无法序列化的特殊对象，如日期等
+            if (value instanceof Date) return value.toISOString();
+            return value;
+          }));
+          
+          return {
+            content: [
+              {
+                type: "text",
+                text: JSON.stringify(safeQuoteSummary, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          console.error("Error in get_quote_summary:", error);
+          return {
+            content: [
+              {
+                type: "text",
+                text: `获取股票摘要数据时发生错误: ${error instanceof Error ? error.message : "未知错误"}`,
+              },
+            ],
+            isError: true,
+          };
+        }
       }
 
       default:
@@ -682,29 +836,129 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request: ReadResource
     }
 
     if (uri === "yahoo-finance://daily-gainers") {
-      const gainers = await yahooFinance.dailyGainers({ count: 10 });
-      return {
-        contents: [
-          {
-            uri,
-            mimeType: "application/json",
-            text: JSON.stringify(gainers, null, 2),
-          },
-        ],
-      };
+      try {
+        // 设置查询选项
+        const queryOptions = { 
+          count: 10, 
+          lang: "en-US", 
+          region: "US" 
+        };
+        
+        // 使用更加健壮的方式处理数据请求
+        const gainersResult = await yahooFinance.dailyGainers(queryOptions).catch(async (yahooError) => {
+          // 记录原始错误，但继续尝试备用方法
+          console.error("Yahoo Finance dailyGainers API call failed:", yahooError);
+          
+          // 备用方式：直接使用 Yahoo Finance API
+          const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_gainers&count=10`;
+          
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`Yahoo Finance API returned status ${response.status}`);
+          }
+          
+          const data = await response.json();
+          return data?.finance?.result?.[0] || { count: 0, quotes: [] };
+        });
+        
+        if (!gainersResult) {
+          throw new Error("无法获取每日涨幅股票数据");
+        }
+        
+        // 处理和清理数据
+        const safeGainers = {
+          count: gainersResult.count || 0,
+          quotes: (gainersResult.quotes || []).map((item: any) => ({
+            symbol: item.symbol || '',
+            shortName: item.shortName || item.symbol || '',
+            regularMarketPrice: item.regularMarketPrice || null,
+            regularMarketChange: item.regularMarketChange || null,
+            regularMarketChangePercent: item.regularMarketChangePercent || null,
+            regularMarketVolume: item.regularMarketVolume || null,
+            marketCap: item.marketCap || null,
+            exchange: item.exchange || null,
+            fullExchangeName: item.fullExchangeName || null
+          })),
+          start: gainersResult.start,
+          timestamp: new Date().toISOString()
+        };
+        
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: "application/json",
+              text: JSON.stringify(safeGainers, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        console.error("Error in daily-gainers resource:", error);
+        throw new Error(`获取每日涨幅股票数据失败: ${error instanceof Error ? error.message : "未知错误"}`);
+      }
     }
 
     if (uri === "yahoo-finance://daily-losers") {
-      const losers = await yahooFinance.dailyLosers({ count: 10, region: "US", lang: "en-US" });
-      return {
-        contents: [
-          {
-            uri,
-            mimeType: "application/json",
-            text: JSON.stringify(losers, null, 2),
-          },
-        ],
-      };
+      try {
+        // 设置查询选项
+        const queryOptions = { 
+          count: 10, 
+          lang: "en-US", 
+          region: "US" 
+        };
+        
+        // 使用更加健壮的方式处理数据请求
+        const losersResult = await yahooFinance.dailyLosers(queryOptions).catch(async (yahooError) => {
+          // 记录原始错误，但继续尝试备用方法
+          console.error("Yahoo Finance dailyLosers API call failed:", yahooError);
+          
+          // 备用方式：直接使用 Yahoo Finance API
+          const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_losers&count=10`;
+          
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`Yahoo Finance API returned status ${response.status}`);
+          }
+          
+          const data = await response.json();
+          return data?.finance?.result?.[0] || { count: 0, quotes: [] };
+        });
+        
+        if (!losersResult) {
+          throw new Error("无法获取每日跌幅股票数据");
+        }
+        
+        // 处理和清理数据
+        const safeLosers = {
+          count: losersResult.count || 0,
+          quotes: (losersResult.quotes || []).map((item: any) => ({
+            symbol: item.symbol || '',
+            shortName: item.shortName || item.symbol || '',
+            regularMarketPrice: item.regularMarketPrice || null,
+            regularMarketChange: item.regularMarketChange || null,
+            regularMarketChangePercent: item.regularMarketChangePercent || null,
+            regularMarketVolume: item.regularMarketVolume || null,
+            marketCap: item.marketCap || null,
+            exchange: item.exchange || null,
+            fullExchangeName: item.fullExchangeName || null
+          })),
+          start: losersResult.start,
+          timestamp: new Date().toISOString()
+        };
+        
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: "application/json",
+              text: JSON.stringify(safeLosers, null, 2),
+            },
+          ],
+        };
+      } catch (error) {
+        console.error("Error in daily-losers resource:", error);
+        throw new Error(`获取每日跌幅股票数据失败: ${error instanceof Error ? error.message : "未知错误"}`);
+      }
     }
 
     if (uri === "yahoo-finance://news/general") {
