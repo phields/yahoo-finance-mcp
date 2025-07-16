@@ -115,13 +115,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         description: "Get trending symbols from Yahoo Finance",
         inputSchema: {
           type: "object",
-          properties: {
-            region: {
-              type: "string",
-              description: "Region (US, GB, CA, etc.)",
-              default: "US",
-            },
-          },
+          properties: {},
         },
       },
       {
@@ -146,16 +140,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: "number",
               description: "Number of news articles to return",
               default: 10,
-            },
-            region: {
-              type: "string",
-              description: "Region for news search (US, GB, CA, etc.)",
-              default: "US",
-            },
-            lang: {
-              type: "string",
-              description: "Language for news search",
-              default: "en-US",
             },
           },
           required: ["query"],
@@ -199,16 +183,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description: "Number of reports to return",
               default: 5,
             },
-            lang: {
-              type: "string",
-              description: "Language",
-              default: "en-US",
-            },
-            region: {
-              type: "string",
-              description: "Region",
-              default: "US",
-            },
           },
           required: ["symbol"],
         },
@@ -224,16 +198,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description: "Number of gainers to return",
               default: 10,
             },
-            region: {
-              type: "string",
-              description: "Region",
-              default: "US",
-            },
-            lang: {
-              type: "string",
-              description: "Language",
-              default: "en-US",
-            },
           },
         },
       },
@@ -247,16 +211,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: "number",
               description: "Number of losers to return",
               default: 10,
-            },
-            region: {
-              type: "string",
-              description: "Region",
-              default: "US",
-            },
-            lang: {
-              type: "string",
-              description: "Language",
-              default: "en-US",
             },
           },
         },
@@ -436,8 +390,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
       }
 
       case "get_trending_symbols": {
-        const { region = "US" } = args as { region?: string };
-        const trending = await yahooFinance.trendingSymbols(region);
+        const trending = await yahooFinance.trendingSymbols("US");
         return {
           content: [
             {
@@ -478,17 +431,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
       }
 
       case "get_news": {
-        const { query, newsCount = 10, region = "US", lang = "en-US" } = args as {
+        const { query, newsCount = 10 } = args as {
           query: string;
           newsCount?: number;
-          region?: string;
-          lang?: string;
         };
         
         const searchResults = await yahooFinance.search(query, {
           newsCount,
-          region,
-          lang,
         });
         
         return {
@@ -526,17 +475,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
       }
 
       case "get_insights": {
-        const { symbol, reportsCount = 5, lang = "en-US", region = "US" } = args as {
+        const { symbol, reportsCount = 5 } = args as {
           symbol: string;
           reportsCount?: number;
-          lang?: string;
-          region?: string;
         };
         
         const insights = await yahooFinance.insights(symbol, {
           reportsCount,
-          lang,
-          region,
         });
         
         return {
@@ -550,13 +495,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
       }
 
       case "get_daily_gainers": {
-        const { count = 10, region = "US", lang = "en-US" } = args as {
+        const { count = 10 } = args as {
           count?: number;
-          region?: string;
-          lang?: string;
         };
         
-        const gainers = await yahooFinance.dailyGainers({ count, region, lang });
+        const gainers = await yahooFinance.dailyGainers({ count });
         
         return {
           content: [
@@ -569,13 +512,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request: CallToolRequest)
       }
 
       case "get_daily_losers": {
-        const { count = 10, region = "US", lang = "en-US" } = args as {
+        const { count = 10 } = args as {
           count?: number;
-          region?: string;
-          lang?: string;
         };
         
-        const losers = await yahooFinance.dailyLosers({ count, region, lang });
+        const losers = await yahooFinance.dailyLosers({ count });
         
         return {
           content: [
@@ -741,7 +682,7 @@ server.setRequestHandler(ReadResourceRequestSchema, async (request: ReadResource
     }
 
     if (uri === "yahoo-finance://daily-gainers") {
-      const gainers = await yahooFinance.dailyGainers({ count: 10, region: "US", lang: "en-US" });
+      const gainers = await yahooFinance.dailyGainers({ count: 10 });
       return {
         contents: [
           {
