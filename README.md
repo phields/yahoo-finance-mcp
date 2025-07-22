@@ -1,12 +1,16 @@
-# Yahoo Finance MCP Server
+# Yahoo Finance MCP - Multi-Usage Library
 
 [![npm version](https://badge.fury.io/js/yahoo-finance-mcp.svg)](https://badge.fury.io/js/yahoo-finance-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A Model Context Protocol (MCP) server that provides access to Yahoo Finance data for stock quotes, financial news, and market information. This server enables AI assistants to access real-time and historical financial data through the MCP protocol.
+A versatile Yahoo Finance library that supports both Model Context Protocol (MCP) servers and LlamaIndex tool integration. Provides comprehensive financial data access through multiple usage patterns.
 
 ## Features
 
+- 🔌 **MCP Server**: Run as a standalone Model Context Protocol server
+- 🦙 **LlamaIndex Tools**: Use as LlamaIndex agent tools
+- 📚 **Direct Usage**: Import and use core functions directly
+- 🌐 **Comprehensive API**: 14 financial data tools covering quotes, historical data, news, and more
 - 📈 **Real-time stock quotes** and historical data
 - 📰 **Financial news** and market updates  
 - 📊 **Company information** and financial metrics
@@ -19,11 +23,13 @@ A Model Context Protocol (MCP) server that provides access to Yahoo Finance data
 ## Table of Contents
 
 - [Installation](#installation)
-- [Usage](#usage)
-- [Configuration](#configuration)
+- [Usage Options](#usage-options)
 - [Available Tools](#available-tools)
-- [Resources](#resources)
+- [Tool Categories](#tool-categories)
+- [Examples](#examples)
+- [API Reference](#api-reference)
 - [Development](#development)
+- [Architecture](#architecture)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -35,7 +41,13 @@ A Model Context Protocol (MCP) server that provides access to Yahoo Finance data
 npm install -g yahoo-finance-mcp
 ```
 
-### Method 2: Build from source
+### Method 2: Install for library usage
+
+```bash
+npm install yahoo-finance-mcp
+```
+
+### Method 3: Build from source
 
 1. Clone the repository:
 ```bash
@@ -53,17 +65,15 @@ npm install
 npm run build
 ```
 
-### Method 3: Using npx (No installation required)
+## Usage Options
 
-```bash
-npx yahoo-finance-mcp
-```
+This library supports three different usage patterns:
 
-## Usage
+### 1. As an MCP Server
 
-### With Claude Desktop
+#### With Claude Desktop
 
-To use this server with Claude Desktop, add the following to your `claude_desktop_config.json`:
+Add to your `claude_desktop_config.json`:
 
 ```json
 {
@@ -76,145 +86,221 @@ To use this server with Claude Desktop, add the following to your `claude_deskto
 }
 ```
 
-### With other MCP clients
-
-The server can be used with any MCP-compatible client. Start the server and connect to it using the MCP protocol.
-
-### As a standalone server
+#### Standalone Server
 
 ```bash
 npm start
+# or for global installation
+yahoo-finance-mcp
 ```
 
-### Development mode
+### 2. As LlamaIndex Tools
 
-```bash
-npm run dev
+```typescript
+import { allYahooFinanceTools, quotingTools, analysisTools } from 'yahoo-finance-mcp/llamaindex';
+import { OpenAI } from 'llamaindex';
+
+// Use all tools
+const agent = new OpenAI().asAgent(allYahooFinanceTools);
+
+// Or use specific categories
+const quotingAgent = new OpenAI().asAgent(quotingTools);
+const analysisAgent = new OpenAI().asAgent(analysisTools);
+
+// Get a stock quote
+const response = await agent.chat({ message: "Get me the current quote for AAPL" });
 ```
 
-### Configuration
+### 3. Direct Function Usage
 
-Create a `.env` file in the root directory with any necessary configuration:
+```typescript
+import { getQuote, getHistoricalData, searchSymbols } from 'yahoo-finance-mcp/tools';
 
-```env
-# Optional: Set custom port (default: 3000)
-PORT=3000
+// Get current quote
+const quote = await getQuote({ symbol: 'AAPL' });
 
-# Optional: Enable debug logging
-DEBUG=true
+// Get historical data
+const history = await getHistoricalData({
+  symbol: 'AAPL',
+  period1: '2023-01-01',
+  period2: '2023-12-31',
+  interval: '1d'
+});
 
-# Optional: Set request timeout (default: 30000ms)
-REQUEST_TIMEOUT=30000
+// Search for symbols
+const results = await searchSymbols({ query: 'Apple' });
 ```
 
 ## Available Tools
 
-The MCP server provides the following tools for financial data access:
+This library provides 14 comprehensive financial data tools:
 
-### `get_quote`
-Get current stock quote information including price, volume, and market cap.
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `getQuote` | Get current stock quote | `symbol` |
+| `getHistoricalData` | Get historical price data | `symbol`, `period1`, `period2`, `interval` |
+| `searchSymbols` | Search for stock symbols | `query` |
+| `getCompanyInfo` | Get company profile information | `symbol` |
+| `getRecommendations` | Get analyst recommendations | `symbol` |
+| `getTrendingSymbols` | Get trending stocks by region | - |
+| `getMarketSummary` | Get major market indices | - |
+| `getNews` | Get financial news | `query`, `newsCount` |
+| `getOptions` | Get options data | `symbol`, `formatted`, `date?` |
+| `getInsights` | Get research insights | `symbol`, `reportsCount` |
+| `getDailyGainers` | Get top gaining stocks | - |
+| `getDailyLosers` | Get top losing stocks | - |
+| `getChart` | Get chart data | `symbol`, `range`, `interval` |
+| `getQuoteSummary` | Get comprehensive quote data | `symbol`, `modules` |
 
-**Parameters:**
-- `symbol` (required): Stock symbol (e.g., "AAPL", "GOOGL", "TSLA")
+## Tool Categories
 
-**Example:**
-```json
-{
-  "symbol": "AAPL"
-}
+### Quoting Tools
+Core stock price and quote functionality:
+- `getQuote` - Current stock quotes
+- `getHistoricalData` - Historical price data 
+- `getChart` - Chart data for visualization
+- `getQuoteSummary` - Comprehensive quote information
+
+### Analysis Tools  
+Market analysis and research:
+- `getRecommendations` - Analyst recommendations
+- `getInsights` - Research reports and analysis
+- `getOptions` - Options chain data
+- `getCompanyInfo` - Company profile and financial metrics
+
+### Discovery Tools
+Finding and exploring stocks:
+- `searchSymbols` - Symbol and company search
+- `getTrendingSymbols` - Popular/trending stocks
+- `getDailyGainers` - Best performing stocks
+- `getDailyLosers` - Worst performing stocks
+
+### Market Data Tools
+Overall market information:
+- `getMarketSummary` - Major indices and market overview
+- `getNews` - Financial news and updates
+
+## Examples
+
+```
+┌─────────────────────────────────────┐
+│           Usage Layers              │
+├─────────────────────────────────────┤
+│  MCP Server  │ LlamaIndex │ Direct  │
+│   (mcp.ts)   │  (llamaindex │ Usage │ 
+│              │    .ts)     │       │
+├─────────────────────────────────────┤
+│         Core Business Logic         │
+│            (tools.ts)               │
+├─────────────────────────────────────┤
+│        Yahoo Finance API            │
+│      (yahoo-finance2 library)       │
+└─────────────────────────────────────┘
 ```
 
-### `get_historical_data`
-Get historical stock data with flexible date ranges and intervals.
+### Key Benefits
 
-**Parameters:**
-- `symbol` (required): Stock symbol
-- `period1` (optional): Start date (YYYY-MM-DD) or period like '1mo', '1y' (default: '1y')
-- `period2` (optional): End date (YYYY-MM-DD) or 'now' (default: 'now')
-- `interval` (optional): Data interval - 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo (default: '1d')
+- **Type Safety**: Full TypeScript support with Zod schema validation
+- **Modularity**: Use only what you need 
+- **Flexibility**: Multiple integration patterns
+- **Consistency**: Same core functions across all usage patterns
+- **Extensibility**: Easy to add new tools or modify existing ones
 
-**Example:**
-```json
-{
-  "symbol": "AAPL",
-  "period1": "2024-01-01",
-  "period2": "2024-12-31",
-  "interval": "1d"
-}
+## Development
+
+### Prerequisites
+
+- Node.js 18+ 
+- npm or yarn
+
+### Setup
+
+```bash
+git clone https://github.com/phields/yahoo-finance-mcp.git
+cd yahoo-finance-mcp
+npm install
 ```
 
-### `search_symbols`
-Search for stock symbols by company name or ticker.
+### Development Commands
 
-**Parameters:**
-- `query` (required): Search query (company name or partial ticker)
+```bash
+# Build the project
+npm run build
 
-**Example:**
-```json
-{
-  "query": "Apple"
-}
+# Start MCP server in development
+npm run dev
+
+# Start MCP server 
+npm start
+
+# Run tests (if available)
+npm test
+
+# Clean build artifacts
+npm run clean
 ```
 
-### `get_company_info`
-Get detailed company information and key statistics.
+### Adding New Tools
 
-**Parameters:**
-- `symbol` (required): Stock symbol
+1. Add your function to `src/tools.ts` with Zod schema
+2. Export the function and schema
+3. Add LlamaIndex wrapper to `src/llamaindex-tools.ts`
+4. Add MCP handler to `src/mcp-server.ts`
+5. Update exports in `src/index.ts`
 
-**Example:**
-```json
-{
-  "symbol": "AAPL"
-}
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/new-tool`
+3. Make your changes
+4. Test your changes: `npm run build && npm test`
+5. Commit your changes: `git commit -am 'Add new tool'`
+6. Push to the branch: `git push origin feature/new-tool`
+7. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+## Acknowledgments
+
+- Built on top of the excellent [yahoo-finance2](https://github.com/gadicc/node-yahoo-finance2) library
+- Inspired by the [Model Context Protocol](https://modelcontextprotocol.io/) specification
+- Follows patterns from [LlamaIndex](https://docs.llamaindex.ai/) tool integration
+
+## Support
+
+- 📖 [Documentation](https://github.com/phields/yahoo-finance-mcp#readme)
+- 🐛 [Issue Tracker](https://github.com/phields/yahoo-finance-mcp/issues)
+- 💬 [Discussions](https://github.com/phields/yahoo-finance-mcp/discussions)
+
+---
+
+**Note**: This library provides access to Yahoo Finance data for educational and research purposes. Please respect Yahoo Finance's terms of service and rate limits when using this library in production applications.
+
+```
+┌─────────────────────────────────────┐
+│           Usage Layers              │
+├─────────────────────────────────────┤
+│  MCP Server  │ LlamaIndex │ Direct  │
+│   (mcp.ts)   │  (llamaindex │ Usage │ 
+│              │    .ts)     │       │
+├─────────────────────────────────────┤
+│         Core Business Logic         │
+│            (tools.ts)               │
+├─────────────────────────────────────┤
+│        Yahoo Finance API            │
+│      (yahoo-finance2 library)       │
+└─────────────────────────────────────┘
 ```
 
-### `get_recommendations`
-Get analyst recommendations and ratings for a stock.
+### Key Benefits
 
-**Parameters:**
-- `symbol` (required): Stock symbol
-
-**Example:**
-```json
-{
-  "symbol": "AAPL"
-}
-```
-
-### `get_trending_symbols`
-Get trending symbols from Yahoo Finance by region.
-
-**Parameters:**
-- `region` (optional): Region code (US, GB, CA, AU, etc.) (default: 'US')
-
-**Example:**
-```json
-{
-  "region": "US"
-}
-```
-
-### `get_market_summary`
-Get market summary with major indices (S&P 500, NASDAQ, Dow Jones, etc.).
-
-**Parameters:** None
-
-**Example:**
-```json
-{}
-```
-
-## Resources
-
-The server provides access to various financial data resources:
-
-- **Market Summary**: `yahoo-finance://market-summary` - Access to major market indices and their current status
-- **Trending Symbols**: `yahoo-finance://trending-symbols` - Real-time trending stocks by region
-- **Real-time Quotes**: Live stock prices, volumes, and market data
-- **Historical Data**: Historical price data with flexible date ranges and intervals
-- **Company Information**: Detailed company profiles, statistics, and financial metrics
-- **Analyst Recommendations**: Professional analyst ratings and recommendations
+- **Type Safety**: Full TypeScript support with Zod schema validation
+- **Modularity**: Use only what you need 
+- **Flexibility**: Multiple integration patterns
+- **Consistency**: Same core functions across all usage patterns
+- **Extensibility**: Easy to add new tools or modify existing ones
 
 ## Error Handling
 
