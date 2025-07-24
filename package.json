@@ -1,6 +1,6 @@
 {
   "name": "yahoo-finance-mcp",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Multi-usage Yahoo Finance library supporting MCP server and LlamaIndex tool integration",
   "main": "build/index.js",
   "type": "module",

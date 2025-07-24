@@ -23,14 +23,14 @@ import {
  * YahooFinanceMcp类 - 封装Yahoo Finance MCP服务器功能
  */
 export class YahooFinanceMcp {
-  private server: McpServer;
+  public server: McpServer;
   private transport: StdioServerTransport | null = null;
   
   constructor() {
     // 创建MCP服务器实例
     this.server = new McpServer({
       name: "yahoo-finance-mcp",
-      version: "1.0.0",
+      version: "1.4.1",
     });
     
     // 初始化工具定义
