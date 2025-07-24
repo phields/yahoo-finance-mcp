@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
  * Yahoo Finance MCP Server - 入口文件
- * 使用新的McpAgent类启动MCP服务器
+ * 使用新的YahooFinanceMcp类启动MCP服务器
  */
-import { yahooFinanceMcpAgent } from './mcp-agent.js';
+import { yahooFinanceMcp } from './server.js';
 
 // 启动MCP服务器
 async function main() {
   try {
-    await yahooFinanceMcpAgent.start();
+    await yahooFinanceMcp.start();
   } catch (error) {
     console.error("Failed to start MCP server:", error);
     process.exit(1);

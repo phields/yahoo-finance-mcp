@@ -1,5 +1,7 @@
-import { McpAgent } from "agents/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { z } from "zod";
+
 import {
   getQuote,
   getHistoricalData,
@@ -16,26 +18,29 @@ import {
   getChart,
   getQuoteSummary,
 } from "./tools.js";
-import { z } from "zod";
 
 /**
- * Yahoo Finance MCP Agent for Cloudflare Workers
- * 
- * This class extends McpAgent to provide Yahoo Finance functionality
- * that can be deployed on Cloudflare Workers with SSE and HTTP endpoints.
+ * YahooFinanceMcp类 - 封装Yahoo Finance MCP服务器功能
  */
-export class YahooFinanceMcpAgent extends McpAgent {
-  server = new McpServer({
-    name: "Yahoo Finance MCP Server",
-    version: "1.3.0",
-  });
-
-  async init() {
-    // Initialize all Yahoo Finance tools
+export class YahooFinanceMcp {
+  private server: McpServer;
+  private transport: StdioServerTransport | null = null;
+  
+  constructor() {
+    // 创建MCP服务器实例
+    this.server = new McpServer({
+      name: "yahoo-finance-mcp",
+      version: "1.0.0",
+    });
+    
+    // 初始化工具定义
     this.setupTools();
   }
-
-  private setupTools() {
+  
+  /**
+   * 设置工具定义
+   */
+  private setupTools(): void {
     // Stock quote tool
     this.server.tool(
       "get_quote",
@@ -55,6 +60,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -84,6 +90,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -108,6 +115,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -132,6 +140,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -156,6 +165,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -166,9 +176,9 @@ export class YahooFinanceMcpAgent extends McpAgent {
       "get_trending_symbols",
       "Get trending symbols from Yahoo Finance",
       {},
-      async (params) => {
+      async () => {
         try {
-          const result = await getTrendingSymbols(params);
+          const result = await getTrendingSymbols({});
           return {
             content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
           };
@@ -180,6 +190,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -190,9 +201,9 @@ export class YahooFinanceMcpAgent extends McpAgent {
       "get_market_summary",
       "Get market summary with major indices",
       {},
-      async (params) => {
+      async () => {
         try {
-          const result = await getMarketSummary(params);
+          const result = await getMarketSummary({});
           return {
             content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
           };
@@ -204,6 +215,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -231,6 +243,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -259,6 +272,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -286,6 +300,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -295,7 +310,9 @@ export class YahooFinanceMcpAgent extends McpAgent {
     this.server.tool(
       "get_daily_gainers",
       "Get stocks with the highest gains for the day",
-      { count: z.number().default(10).describe("Number of gainers to return") },
+      {
+        count: z.number().default(10).describe("Number of gainers to return"),
+      },
       async (params) => {
         try {
           const result = await getDailyGainers(params);
@@ -310,6 +327,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -319,7 +337,9 @@ export class YahooFinanceMcpAgent extends McpAgent {
     this.server.tool(
       "get_daily_losers",
       "Get stocks with the highest losses for the day",
-      { count: z.number().default(10).describe("Number of losers to return") },
+      {
+        count: z.number().default(10).describe("Number of losers to return"),
+      },
       async (params) => {
         try {
           const result = await getDailyLosers(params);
@@ -334,6 +354,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -364,6 +385,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
@@ -375,10 +397,7 @@ export class YahooFinanceMcpAgent extends McpAgent {
       "Get comprehensive quote summary with various modules",
       {
         symbol: z.string().describe("Stock symbol"),
-        modules: z
-          .array(z.string())
-          .default(["summaryDetail", "financialData", "recommendationTrend", "defaultKeyStatistics"])
-          .describe("List of modules to include (assetProfile, summaryDetail, recommendationTrend, financialData, earningsHistory, defaultKeyStatistics, calendarEvents, etc.)"),
+        modules: z.array(z.string()).default(["summaryDetail", "financialData", "recommendationTrend", "defaultKeyStatistics"]).describe("List of modules to include (assetProfile, summaryDetail, recommendationTrend, financialData, earningsHistory, defaultKeyStatistics, calendarEvents, etc.)"),
       },
       async (params) => {
         try {
@@ -394,9 +413,53 @@ export class YahooFinanceMcpAgent extends McpAgent {
                 text: `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
               },
             ],
+            isError: true,
           };
         }
       }
     );
   }
+  
+  /**
+   * 启动MCP服务器
+   * 返回一个Promise，服务器启动成功后resolve，失败则reject
+   */
+  public async start(): Promise<void> {
+    try {
+      this.transport = new StdioServerTransport();
+      await this.server.connect(this.transport);
+      console.error("Yahoo Finance MCP server running on stdio");
+    } catch (error) {
+      console.error("Failed to start MCP server:", error);
+      throw error;
+    }
+  }
+  
+  /**
+   * 停止MCP服务器
+   * 注意：当前SDK可能没有提供disconnect方法，因此这里我们只是清理引用
+   */
+  public async stop(): Promise<void> {
+    if (this.transport) {
+      try {
+        // 清理传输引用
+        this.transport = null;
+        console.error("Yahoo Finance MCP server stopped");
+      } catch (error) {
+        console.error("Failed to stop MCP server:", error);
+        throw error;
+      }
+    }
+  }
+}
+
+// 导出Agent的单例实例
+export const yahooFinanceMcp = new YahooFinanceMcp();
+
+// 如果作为直接运行的脚本，则启动服务器
+if (typeof require !== 'undefined' && require.main === module) {
+  yahooFinanceMcp.start().catch((error: Error) => {
+    console.error("Server error:", error);
+    process.exit(1);
+  });
 }

@@ -4,8 +4,8 @@ export * from "./tools.js";
 // Re-export LlamaIndex tools for convenience
 export * from "./llamaindex-tools.js";
 
-// Export MCP agent
-export * from "./mcp-agent.js";
+// Export MCP server
+export * from "./server.js";
 
 // Export types and schemas
 export type {

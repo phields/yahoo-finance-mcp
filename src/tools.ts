@@ -70,13 +70,13 @@ export const getQuoteSummarySchema = z.object({
 });
 
 // Core tool functions
-export async function getQuote(params: z.infer<typeof getQuoteSchema>) {
+export async function getQuote(params: z.infer<typeof getQuoteSchema>): Promise<any> {
   const { symbol } = params;
   const quote = await yahooFinance.quote(symbol);
   return quote;
 }
 
-export async function getHistoricalData(params: z.infer<typeof getHistoricalDataSchema>) {
+export async function getHistoricalData(params: z.infer<typeof getHistoricalDataSchema>): Promise<any> {
   const { symbol, period1 = "1y", period2 = "now", interval = "1d" } = params;
   
   // Parse period strings
@@ -95,13 +95,13 @@ export async function getHistoricalData(params: z.infer<typeof getHistoricalData
   return data;
 }
 
-export async function searchSymbols(params: z.infer<typeof searchSymbolsSchema>) {
+export async function searchSymbols(params: z.infer<typeof searchSymbolsSchema>): Promise<any> {
   const { query } = params;
   const results = await yahooFinance.search(query);
   return results;
 }
 
-export async function getCompanyInfo(params: z.infer<typeof getCompanyInfoSchema>) {
+export async function getCompanyInfo(params: z.infer<typeof getCompanyInfoSchema>): Promise<any> {
   const { symbol } = params;
   const [quoteSummary, assetProfile] = await Promise.all([
     yahooFinance.quoteSummary(symbol, {
@@ -120,18 +120,18 @@ export async function getCompanyInfo(params: z.infer<typeof getCompanyInfoSchema
   return companyInfo;
 }
 
-export async function getRecommendations(params: z.infer<typeof getRecommendationsSchema>) {
+export async function getRecommendations(params: z.infer<typeof getRecommendationsSchema>): Promise<any> {
   const { symbol } = params;
   const recommendations = await yahooFinance.recommendationsBySymbol(symbol);
   return recommendations;
 }
 
-export async function getTrendingSymbols(params: z.infer<typeof getTrendingSymbolsSchema>) {
+export async function getTrendingSymbols(params: z.infer<typeof getTrendingSymbolsSchema>): Promise<any> {
   const trending = await yahooFinance.trendingSymbols("US");
   return trending;
 }
 
-export async function getMarketSummary(params: z.infer<typeof getMarketSummarySchema>) {
+export async function getMarketSummary(params: z.infer<typeof getMarketSummarySchema>): Promise<any> {
   // Get major indices
   const indices = ["^GSPC", "^DJI", "^IXIC", "^RUT", "^VIX"];
   const quotes = await Promise.all(
@@ -153,7 +153,7 @@ export async function getMarketSummary(params: z.infer<typeof getMarketSummarySc
   return marketSummary;
 }
 
-export async function getNews(params: z.infer<typeof getNewsSchema>) {
+export async function getNews(params: z.infer<typeof getNewsSchema>): Promise<any> {
   const { query, newsCount = 10 } = params;
   
   const searchResults = await yahooFinance.search(query, {
@@ -163,7 +163,7 @@ export async function getNews(params: z.infer<typeof getNewsSchema>) {
   return searchResults.news;
 }
 
-export async function getOptions(params: z.infer<typeof getOptionsSchema>) {
+export async function getOptions(params: z.infer<typeof getOptionsSchema>): Promise<any> {
   const { symbol, date, formatted = false } = params;
   
   const queryOptions: any = { formatted };
@@ -175,7 +175,7 @@ export async function getOptions(params: z.infer<typeof getOptionsSchema>) {
   return options;
 }
 
-export async function getInsights(params: z.infer<typeof getInsightsSchema>) {
+export async function getInsights(params: z.infer<typeof getInsightsSchema>): Promise<any> {
   const { symbol, reportsCount = 5 } = params;
   
   const insights = await yahooFinance.insights(symbol, {
@@ -185,7 +185,7 @@ export async function getInsights(params: z.infer<typeof getInsightsSchema>) {
   return insights;
 }
 
-export async function getDailyGainers(params: z.infer<typeof getDailyGainersSchema>) {
+export async function getDailyGainers(params: z.infer<typeof getDailyGainersSchema>): Promise<any> {
   const { count = 10 } = params;
   
   try {
@@ -242,7 +242,7 @@ export async function getDailyGainers(params: z.infer<typeof getDailyGainersSche
   }
 }
 
-export async function getDailyLosers(params: z.infer<typeof getDailyLosersSchema>) {
+export async function getDailyLosers(params: z.infer<typeof getDailyLosersSchema>): Promise<any> {
   const { count = 10 } = params;
   
   try {
@@ -299,7 +299,7 @@ export async function getDailyLosers(params: z.infer<typeof getDailyLosersSchema
   }
 }
 
-export async function getChart(params: z.infer<typeof getChartSchema>) {
+export async function getChart(params: z.infer<typeof getChartSchema>): Promise<any> {
   const { symbol, period1 = "1mo", period2 = "now", interval = "1d", events = "div|split|earn" } = params;
   
   try {
@@ -331,7 +331,7 @@ export async function getChart(params: z.infer<typeof getChartSchema>) {
   }
 }
 
-export async function getQuoteSummary(params: z.infer<typeof getQuoteSummarySchema>) {
+export async function getQuoteSummary(params: z.infer<typeof getQuoteSummarySchema>): Promise<any> {
   const { symbol, modules = ["summaryDetail", "financialData", "recommendationTrend", "defaultKeyStatistics"] } = params;
   
   try {

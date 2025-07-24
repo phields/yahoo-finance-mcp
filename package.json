@@ -1,6 +1,6 @@
 {
   "name": "yahoo-finance-mcp",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Multi-usage Yahoo Finance library supporting MCP server and LlamaIndex tool integration",
   "main": "build/index.js",
   "type": "module",
@@ -8,8 +8,7 @@
     ".": "./build/index.js",
     "./tools": "./build/tools.js",
     "./llamaindex": "./build/llamaindex-tools.js",
-    "./mcp": "./build/mcp-agent.js",
-    "./cf-worker": "./build/cf-worker-agent.js",
+    "./server": "./build/server.js",
     "./examples": "./build/examples-mcp-agent.js"
   },
   "bin": {
@@ -20,8 +19,7 @@
     "dev": "tsx src/index.ts",
     "dev:mcp": "tsx src/mcp-server.ts",
     "start": "node build/mcp-server.js",
-    "start:mcp": "node build/mcp-server.js",
-    "build:cf-worker": "tsc"
+    "start:mcp": "node build/mcp-server.js"
   },
   "keywords": [
     "mcp",
@@ -37,8 +35,7 @@
   },
   "dependencies": {
     "@llamaindex/core": "^0.6.17",
-    "@modelcontextprotocol/sdk": "^0.4.0",
-    "agents": "^0.0.109",
+    "@modelcontextprotocol/sdk": "^1.16.0",
     "axios": "^1.6.0",
     "dotenv": "^16.3.1",
     "yahoo-finance2": "^3.4.1",
