@@ -3,12 +3,11 @@
 [![npm version](https://badge.fury.io/js/yahoo-finance-mcp.svg)](https://badge.fury.io/js/yahoo-finance-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A versatile Yahoo Finance library that supports both Model Context Protocol (MCP) servers and LlamaIndex tool integration. Provides comprehensive financial data access through multiple usage patterns.
+A versatile Yahoo Finance library that supports Model Context Protocol (MCP) servers. Provides comprehensive financial data access through multiple usage patterns.
 
 ## Features
 
 - 🔌 **MCP Server**: Run as a standalone Model Context Protocol server
-- 🦙 **LlamaIndex Tools**: Use as LlamaIndex agent tools
 - 📚 **Direct Usage**: Import and use core functions directly
 - 🌐 **Comprehensive API**: 14 financial data tools covering quotes, historical data, news, and more
 - 📈 **Real-time stock quotes** and historical data
@@ -67,7 +66,7 @@ npm run build
 
 ## Usage Options
 
-This library supports three different usage patterns:
+This library supports two different usage patterns:
 
 ### 1. As an MCP Server
 
@@ -94,24 +93,8 @@ npm start
 yahoo-finance-mcp
 ```
 
-### 2. As LlamaIndex Tools
 
-```typescript
-import { allYahooFinanceTools, quotingTools, analysisTools } from 'yahoo-finance-mcp/llamaindex';
-import { OpenAI } from 'llamaindex';
-
-// Use all tools
-const agent = new OpenAI().asAgent(allYahooFinanceTools);
-
-// Or use specific categories
-const quotingAgent = new OpenAI().asAgent(quotingTools);
-const analysisAgent = new OpenAI().asAgent(analysisTools);
-
-// Get a stock quote
-const response = await agent.chat({ message: "Get me the current quote for AAPL" });
-```
-
-### 3. Direct Function Usage
+### 2. Direct Function Usage
 
 ```typescript
 import { getQuote, getHistoricalData, searchSymbols } from 'yahoo-finance-mcp/tools';
@@ -186,9 +169,8 @@ Overall market information:
 ┌─────────────────────────────────────┐
 │           Usage Layers              │
 ├─────────────────────────────────────┤
-│  MCP Server  │ LlamaIndex │ Direct  │
-│   (mcp.ts)   │  (llamaindex │ Usage │ 
-│              │    .ts)     │       │
+│   MCP Server   │    Direct Usage    │
+│    (mcp.ts)    │                    │
 ├─────────────────────────────────────┤
 │         Core Business Logic         │
 │            (tools.ts)               │
@@ -244,9 +226,8 @@ npm run clean
 
 1. Add your function to `src/tools.ts` with Zod schema
 2. Export the function and schema
-3. Add LlamaIndex wrapper to `src/llamaindex-tools.ts`
-4. Add MCP handler to `src/mcp-server.ts`
-5. Update exports in `src/index.ts`
+3. Add MCP handler to `src/mcp-server.ts`
+4. Update exports in `src/index.ts`
 
 ## Contributing
 
@@ -266,7 +247,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 - Built on top of the excellent [yahoo-finance2](https://github.com/gadicc/node-yahoo-finance2) library
 - Inspired by the [Model Context Protocol](https://modelcontextprotocol.io/) specification
-- Follows patterns from [LlamaIndex](https://docs.llamaindex.ai/) tool integration
 
 ## Support
 
@@ -277,22 +257,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ---
 
 **Note**: This library provides access to Yahoo Finance data for educational and research purposes. Please respect Yahoo Finance's terms of service and rate limits when using this library in production applications.
-
-```
-┌─────────────────────────────────────┐
-│           Usage Layers              │
-├─────────────────────────────────────┤
-│  MCP Server  │ LlamaIndex │ Direct  │
-│   (mcp.ts)   │  (llamaindex │ Usage │ 
-│              │    .ts)     │       │
-├─────────────────────────────────────┤
-│         Core Business Logic         │
-│            (tools.ts)               │
-├─────────────────────────────────────┤
-│        Yahoo Finance API            │
-│      (yahoo-finance2 library)       │
-└─────────────────────────────────────┘
-```
 
 ### Key Benefits
 
