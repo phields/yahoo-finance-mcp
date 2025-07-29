@@ -23,6 +23,7 @@ A versatile Yahoo Finance library that supports Model Context Protocol (MCP) ser
 
 - [Installation](#installation)
 - [Usage Options](#usage-options)
+- [Transport Modes](#transport-modes)
 - [Available Tools](#available-tools)
 - [Tool Categories](#tool-categories)
 - [Examples](#examples)
@@ -112,6 +113,111 @@ const history = await getHistoricalData({
 
 // Search for symbols
 const results = await searchSymbols({ query: 'Apple' });
+```
+
+## Transport Modes
+
+The MCP server supports multiple transport modes for different use cases:
+
+### 1. STDIO Transport (Default)
+The most basic transport mode, suitable for command-line tools and direct process communication.
+
+```typescript
+import { yahooFinanceMcp } from "yahoo-finance-mcp/server";
+
+// Start stdio transport (default)
+await yahooFinanceMcp.start();
+
+// Or explicitly specify
+await yahooFinanceMcp.start('stdio');
+```
+
+### 2. SSE (Server-Sent Events) Transport
+Suitable for web applications that support real-time data streaming.
+
+```typescript
+import { yahooFinanceMcp } from "yahoo-finance-mcp/server";
+
+// Requires HTTP response object
+await yahooFinanceMcp.start('sse', {
+  endpoint: "/message",
+  response: httpResponse // HTTP response object
+});
+```
+
+#### Complete Example with Hono Framework
+
+```typescript
+import { Hono } from "hono";
+import { yahooFinanceMcp } from "yahoo-finance-mcp/server";
+
+const app = new Hono();
+
+app.post("/mcp", async (c) => {
+  await yahooFinanceMcp.start('sse', {
+    endpoint: "/mcp",
+    response: c.res
+  });
+  
+  return c.text("Yahoo Finance MCP SSE server started");
+});
+
+export default app;
+```
+
+### 3. StreamableHTTP Transport
+Suitable for HTTP scenarios that require session management.
+
+```typescript
+import { yahooFinanceMcp } from "yahoo-finance-mcp/server";
+
+await yahooFinanceMcp.start('streamableHttp', {
+  sessionIdGenerator: () => {
+    return `yahoo-finance-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+});
+```
+
+### Advanced Usage
+
+#### Get Server Instance
+For custom integration and advanced configuration.
+
+```typescript
+const server = yahooFinanceMcp.getServer();
+// Now you can use server for custom configuration
+```
+
+#### Create Custom Transports
+Manually create transport instances for reuse.
+
+```typescript
+// Create SSE transport
+const sseTransport = yahooFinanceMcp.createSSETransport("/custom-endpoint", response);
+
+// Create StreamableHTTP transport
+const httpTransport = yahooFinanceMcp.createStreamableHTTPTransport({
+  sessionIdGenerator: () => `custom-session-${Date.now()}`
+});
+```
+
+#### Environment Variable Configuration
+Support for selecting transport type via environment variables.
+
+```bash
+# Set transport type
+export TRANSPORT_TYPE=stdio        # Default
+export TRANSPORT_TYPE=sse          # SSE transport
+export TRANSPORT_TYPE=streamableHttp # HTTP transport
+
+# Run server
+npm start
+```
+
+#### Stop Server
+
+```typescript
+await yahooFinanceMcp.stop();
 ```
 
 ## Available Tools

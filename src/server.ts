@@ -1,5 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
 
 import {
@@ -24,7 +26,7 @@ import {
  */
 export class YahooFinanceMcp {
   public server: McpServer;
-  private transport: StdioServerTransport | null = null;
+  private transport: StdioServerTransport | SSEServerTransport | StreamableHTTPServerTransport | null = null;
   
   constructor() {
     // 创建MCP服务器实例
@@ -424,11 +426,26 @@ export class YahooFinanceMcp {
    * 启动MCP服务器
    * 返回一个Promise，服务器启动成功后resolve，失败则reject
    */
-  public async start(): Promise<void> {
+  public async start(transportType: 'stdio' | 'sse' | 'streamableHttp' = 'stdio', options?: { endpoint?: string; response?: any; sessionIdGenerator?: () => string }): Promise<void> {
     try {
-      this.transport = new StdioServerTransport();
-      await this.server.connect(this.transport);
-      console.error("Yahoo Finance MCP server running on stdio");
+      if (transportType === 'stdio') {
+        this.transport = new StdioServerTransport();
+      } else if (transportType === 'sse') {
+        if (!options?.response) {
+          throw new Error("Response object is required for SSE transport");
+        }
+        this.transport = new SSEServerTransport(options.endpoint || "/message", options.response);
+      } else if (transportType === 'streamableHttp') {
+        this.transport = new StreamableHTTPServerTransport({
+          sessionIdGenerator: options?.sessionIdGenerator,
+          // Add other options as needed
+        });
+      }
+      
+      if (this.transport) {
+        await this.server.connect(this.transport);
+        console.error(`Yahoo Finance MCP server running on ${transportType}${options?.endpoint ? ` (endpoint ${options.endpoint})` : ''}`);
+      }
     } catch (error) {
       console.error("Failed to start MCP server:", error);
       throw error;
@@ -450,6 +467,29 @@ export class YahooFinanceMcp {
         throw error;
       }
     }
+  }
+  
+  /**
+   * 获取服务器实例，用于 Hono 集成
+   */
+  public getServer(): McpServer {
+    return this.server;
+  }
+  
+  /**
+   * 创建 SSE 传输的方法
+   */
+  public createSSETransport(endpoint: string = "/message", response: any): SSEServerTransport {
+    return new SSEServerTransport(endpoint, response);
+  }
+  
+  /**
+   * 创建 StreamableHTTP 传输的方法
+   */
+  public createStreamableHTTPTransport(options?: { sessionIdGenerator?: () => string }): StreamableHTTPServerTransport {
+    return new StreamableHTTPServerTransport({
+      sessionIdGenerator: options?.sessionIdGenerator,
+    });
   }
 }
 
