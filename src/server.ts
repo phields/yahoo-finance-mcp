@@ -497,7 +497,7 @@ export class YahooFinanceMcp {
 export const yahooFinanceMcp = new YahooFinanceMcp();
 
 // 如果作为直接运行的脚本，则启动服务器
-if (typeof require !== 'undefined' && require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   yahooFinanceMcp.start().catch((error: Error) => {
     console.error("Server error:", error);
     process.exit(1);

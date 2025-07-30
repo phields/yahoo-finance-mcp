@@ -2,8 +2,7 @@ import YahooFinance from "yahoo-finance2";
 import { z } from "zod";
 
 // Initialize the Yahoo Finance client
-const yahooFinance = new YahooFinance();
-
+const yahooFinance = YahooFinance;
 // Tool parameter schemas using Zod
 export const getQuoteSchema = z.object({
   symbol: z.string().describe("Stock symbol (e.g., AAPL, GOOGL)"),
@@ -189,55 +188,30 @@ export async function getDailyGainers(params: z.infer<typeof getDailyGainersSche
   const { count = 10 } = params;
   
   try {
-    // 设置查询选项，支持语言和区域设置
+    // 使用 screener API 替代 dailyGainers，这是更稳定的方式
     const queryOptions = { 
+      scrIds: "day_gainers" as const,
       count, 
       lang: "en-US", 
       region: "US" 
     };
     
-    // 使用更加健壮的方式处理数据请求
-    const gainersResult = await yahooFinance.dailyGainers(queryOptions).catch(async (yahooError) => {
-      // 记录原始错误，但继续尝试备用方法
-      console.error("Yahoo Finance dailyGainers API call failed:", yahooError);
-      
-      // 备用方式：直接使用 Yahoo Finance API
-      const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_gainers&count=${count}`;
-      
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Yahoo Finance API returned status ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data?.finance?.result?.[0] || { count: 0, quotes: [] };
-    });
+    // 使用 yahooFinance.screener 方法，传入包含 scrIds 的查询选项
+    const gainersResult = await yahooFinance.screener(queryOptions);
     
-    if (!gainersResult) {
-      throw new Error("无法获取每日涨幅股票数据");
-    }
-    
-    // 处理和清理数据
-    const safeGainers = {
+    // 返回处理后的数据，保持与原有格式兼容
+    return {
+      id: gainersResult.id,
+      title: gainersResult.title || "Day Gainers",
+      description: gainersResult.description || "Discover the equities with the greatest gains in the trading day.",
       count: gainersResult.count || 0,
-      quotes: (gainersResult.quotes || []).map((item: any) => ({
-        symbol: item.symbol || '',
-        shortName: item.shortName || item.symbol || '',
-        regularMarketPrice: item.regularMarketPrice || null,
-        regularMarketChange: item.regularMarketChange || null,
-        regularMarketChangePercent: item.regularMarketChangePercent || null,
-        regularMarketVolume: item.regularMarketVolume || null,
-        marketCap: item.marketCap || null,
-        exchange: item.exchange || null,
-        fullExchangeName: item.fullExchangeName || null
-      })),
-      start: gainersResult.start,
+      total: gainersResult.total || 0,
+      start: gainersResult.start || 0,
+      quotes: gainersResult.quotes || [],
       timestamp: new Date().toISOString()
     };
-    
-    return safeGainers;
   } catch (error) {
-    console.error("Error in get_daily_gainers:", error);
+    console.error("Error in getDailyGainers:", error);
     throw new Error(`获取每日涨幅股票数据时发生错误: ${error instanceof Error ? error.message : "未知错误"}`);
   }
 }
@@ -246,55 +220,30 @@ export async function getDailyLosers(params: z.infer<typeof getDailyLosersSchema
   const { count = 10 } = params;
   
   try {
-    // 设置查询选项，支持语言和区域设置
+    // 使用 screener API 替代 dailyLosers，这是更稳定的方式
     const queryOptions = { 
+      scrIds: "day_losers" as const,
       count, 
       lang: "en-US", 
       region: "US" 
     };
     
-    // 使用更加健壮的方式处理数据请求
-    const losersResult = await yahooFinance.dailyLosers(queryOptions).catch(async (yahooError) => {
-      // 记录原始错误，但继续尝试备用方法
-      console.error("Yahoo Finance dailyLosers API call failed:", yahooError);
-      
-      // 备用方式：直接使用 Yahoo Finance API
-      const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_losers&count=${count}`;
-      
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Yahoo Finance API returned status ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data?.finance?.result?.[0] || { count: 0, quotes: [] };
-    });
+    // 使用 yahooFinance.screener 方法，传入包含 scrIds 的查询选项
+    const losersResult = await yahooFinance.screener(queryOptions);
     
-    if (!losersResult) {
-      throw new Error("无法获取每日跌幅股票数据");
-    }
-    
-    // 处理和清理数据
-    const safeLosers = {
+    // 返回处理后的数据，保持与原有格式兼容
+    return {
+      id: losersResult.id,
+      title: losersResult.title || "Day Losers",
+      description: losersResult.description || "Discover the equities with the greatest losses in the trading day.",
       count: losersResult.count || 0,
-      quotes: (losersResult.quotes || []).map((item: any) => ({
-        symbol: item.symbol || '',
-        shortName: item.shortName || item.symbol || '',
-        regularMarketPrice: item.regularMarketPrice || null,
-        regularMarketChange: item.regularMarketChange || null,
-        regularMarketChangePercent: item.regularMarketChangePercent || null,
-        regularMarketVolume: item.regularMarketVolume || null,
-        marketCap: item.marketCap || null,
-        exchange: item.exchange || null,
-        fullExchangeName: item.fullExchangeName || null
-      })),
-      start: losersResult.start,
+      total: losersResult.total || 0,
+      start: losersResult.start || 0,
+      quotes: losersResult.quotes || [],
       timestamp: new Date().toISOString()
     };
-    
-    return safeLosers;
   } catch (error) {
-    console.error("Error in get_daily_losers:", error);
+    console.error("Error in getDailyLosers:", error);
     throw new Error(`获取每日跌幅股票数据时发生错误: ${error instanceof Error ? error.message : "未知错误"}`);
   }
 }
